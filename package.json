@@ -1,0 +1,28 @@
+{
+  "name": "node-boilerplate",
+  "version": "1.0.0",
+  "description": "A boilerplate for Mi2 Lab Node projects.",
+  "main": "server/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mi2lab/node-boilerplate.git"
+  },
+  "author": "Maximilian Speicher",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/mi2lab/node-boilerplate/issues"
+  },
+  "homepage": "https://github.com/mi2lab/node-boilerplate#readme",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "cron": "^1.2.1",
+    "express": "^4.15.3",
+    "ip": "^1.1.5",
+    "os": "^0.1.1",
+    "serve-static": "^1.12.3",
+    "socket.io": "^2.0.3"
+  }
+}
