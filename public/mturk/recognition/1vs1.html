@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>1 vs. 1 Gesture Recognition</title>
+        
+        <style>
+            body {
+                font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
+            }
+            
+            button {
+                background-color: #ccc;
+                border: 1px #fff solid;
+                border-radius: 4px;
+                margin: 10px;
+                padding: 10px;
+                width: 100px;
+            }
+            
+            button:not([disabled]):hover {
+                background-color: rgb(52, 152, 219);
+                color: #fff;
+                cursor: pointer;
+            }
+            
+            img, video {
+                background-color: #fff;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                line-height: 1.42857143;
+                margin: 30px;
+                padding: 4px;
+                height: 161px;
+                -webkit-transition: border .2s ease-in-out;
+                -o-transition: border .2s ease-in-out;
+                transition: border .2s ease-in-out;
+            }
+            
+            .centered {
+                text-align: center;
+            }
+            
+            .hidden {
+                display: none;
+            }
+        </style>
+        
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="lib/URI.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+        <script src="/.common/require.js"></script>
+        <script src="/.common/webRTC.js"></script>
+        
+        <script>
+            (function(window, document, $) {
+                
+                const MTURK_URL = "https://www.mturk.com/mturk/externalSubmit";
+                const SANDBOX_MTURK_URL = "https://workersandbox.mturk.com/mturk/externalSubmit";
+                const SANDBOX_ASSIGNMENT_ID = "ASSIGNMENT_ID_NOT_AVAILABLE";
+                const SERVER_URL = location.href.indexOf("localhost") > -1 ? "http://localhost:8080" : "https://gesturewiz.mi2lab.com";
+
+                const q = URI().query(true);
+                const channel = q.channel;
+                const mode = q.mode;
+                const workerId = q.workerId || (new Date()).getTime();
+                const path = "img/user-defined/";
+                const socket = io();
+                
+                let gesture = "(unassigned)";
+                let gestureExt;
+                let gestureSet;
+                let pageVisibility;
+                let pageVisible = true;
+                let templatePresent = false;
+                let test;
+                let testExt;
+                let testSet;
+                let webRTC;
+                
+                let mTurkUrl = SANDBOX_MTURK_URL;
+                let started = false;
+                let startTime, endTime;
+                
+                require(["pagevisibility"]).then(function() {
+                    pageVisibility = new PageVisibility().on("hidden", function() {
+                        pageVisible = false;
+                        
+                        if (started && !q.channel) {
+                            $("#intro").removeClass("hidden");
+                            $("#task").addClass("hidden");
+
+                            started = false;
+                            startTime = undefined;
+                        }
+                    }).on("visible", function() {
+                        pageVisible = true;
+                    });
+                });
+                
+                if (q.gesture) {
+                    gestureSet = q.gesture.split("/")[0];
+                    gesture = q.gesture.split("/")[1];
+                    gestureExt = gesture.split(".")[1];
+                    
+                    if (!gestureExt) {
+                        gestureExt = "gif";
+                    }
+                    
+                    gesture = gesture.split(".")[0];
+                }
+
+                if (q.test) {
+                    testSet = q.test.split("/")[0];
+                    test = q.test.split("/")[1];
+                    testExt = test.split(".")[1];
+                    
+                    if (!testExt) {
+                        testExt = "gif";
+                    }
+                    
+                    test = test.split(".")[0];
+                }
+
+                const result = {
+                    testSet: testSet,
+                    gestureSet: gestureSet,
+                    testGesture: test,
+                    sampleGesture: gesture
+                };
+
+                const initMTurk = function() {
+                    if (q.assignmentId && q.assignmentId !== SANDBOX_ASSIGNMENT_ID) {
+                        mTurkUrl = MTURK_URL;
+                        result.workerId = q.workerId;
+
+                        $("#start").removeClass("hidden");
+                    }
+                };
+
+                const initWebRTC = function() {
+                    let streamActive = false;
+
+                    socket.on("real$1", function(msg) {
+                        if (msg.event) {
+                            switch (msg.event) {
+                                case "gesture":
+                                    if (!streamActive) {
+                                        $("#current-gesture").attr("src", msg.gesture).on("load", function() {
+                                            $("#video-stream").addClass("hidden");
+                                            $("#current-gesture").removeClass("hidden");
+                                        });
+                                    } else {
+                                        $("#video-stream").addClass("hidden");
+                                        $("#current-gesture").attr("src", msg.gesture).removeClass("hidden");
+                                    }
+                                break;
+                                case "stream":
+                                    if (msg.status === "start") {
+                                        streamActive = true;
+
+                                        $("#video-stream").removeClass("hidden");
+                                        $("#current-gesture").addClass("hidden");
+                                    } else {
+                                        streamActive = false;
+                                    }
+                                break;
+                                case "template":
+                                    if (msg.workerId != workerId) {
+                                        return;
+                                    }
+                                    
+                                    if (started) {
+                                        $("#task-container").removeClass("hidden");
+                                        
+                                        if (!templatePresent && !pageVisible) {
+                                            alert("Your task is ready! Thanks a lot for waiting!");
+                                        }
+                                    }
+                                    
+                                    $("#please-wait").addClass("hidden");
+                                    $("#task").removeClass("hidden");
+                                    
+                                    $("#sample-gesture").attr("src", path + msg.gesture + ".gif?_=" + (new Date()).getTime());
+                                    
+                                    gesture = msg.gesture.split("/")[1];
+                                    templatePresent = true;
+                                break;
+                            }
+                        }
+                    });
+
+                    socket.emit("room", q.channel);
+
+                    webRTC = new WebRTC({
+                        id: workerId,
+                        socket: socket,
+                        video: document.getElementById("video-stream")
+                    });
+                };
+
+                const postData = function(url, data) {
+                    var $form = $("<form method='post' action='" + url + "'></form>");
+
+                    for (var e in data) {
+                        $form.append("<input type='hidden' name='" + e + "' value='" + data[e] + "' />");
+                    }
+
+                    $("body").append($form);
+                    $form.submit();
+                };
+
+                const saveAndExit = function() {
+                    $("button").attr("disabled", true);
+
+                    window.setTimeout(function() {
+                        $.ajax({
+                            url: SERVER_URL + "/save?f=" + encodeURIComponent(testSet) + "_vs_" + encodeURIComponent(gestureSet) + "&gestures=" + JSON.stringify(result)
+                        }).done(function(data) {
+                            var answers = {
+                                assignmentId: q.assignmentId,
+                                workerId: q.workerId,
+                                data: JSON.stringify(result)
+                            };
+
+                            console.info(result);
+                            postData(mTurkUrl, answers);
+                        });
+                    }, 1000);
+                };
+
+                $(function() {
+                    initMTurk();
+                    
+                    var file;
+
+                    if (testSet && test) {
+                        $("#current-gesture").attr("src", path + testSet + "/" + test + "." + testExt + "?_=" + (new Date()).getTime()).show();
+
+                        if (channel) {
+                            socket.emit("room", channel);
+                        }
+                    } else if (channel) {
+                        initWebRTC();
+                    }
+
+                    if (gestureSet && gesture) {
+                        $("#sample-gesture").attr("src", path + gestureSet + "/" + gesture + "." + gestureExt + "?_=" + (new Date()).getTime());
+                        
+                        templatePresent = true;
+                    }
+
+                    $("#start").on("click", function() {
+                        socket.emit("real$1", {
+                            event: "newWorker",
+                            workerId: workerId,
+                            gesture: gesture
+                        });
+                        
+                        $("#intro").addClass("hidden");
+                        $("#task-container").removeClass("hidden");
+                        
+                        if (gesture === "(unassigned)") {
+                            $("#please-wait").removeClass("hidden");
+                        } else {
+                            $("#task").removeClass("hidden");
+                        }
+
+                        started = true;
+                        startTime = (new Date()).getTime();
+                    });
+
+                    $("#yes").on("click", function() {
+                        endTime = (new Date()).getTime();
+
+                        result.time = endTime - startTime;
+                        result.same = true;
+
+                        if (q.channel) {
+                            if (mode === "conflict") {
+                                socket.emit("real$1", {
+                                    event: "conflict",
+                                    result: true,
+                                    gestures: [test, gesture]
+                                });
+
+                                console.log({
+                                    event: "conflict",
+                                    result: true,
+                                    gestures: [test, gesture]
+                                });
+                            } else {
+                                socket.emit("real$1", {
+                                    event: "answer",
+                                    workerId: workerId,
+                                    answer: gesture
+                                });
+                            }
+                        }
+
+                        saveAndExit();
+                    });
+
+                    $("#no").on("click", function() {
+                        endTime = (new Date()).getTime();
+
+                        result.time = endTime - startTime;
+                        result.same = false;
+
+                        if (q.channel && mode === "conflict") {
+                            socket.emit("real$1", {
+                                event: "conflict",
+                                result: false,
+                                gestures: [test, gesture]
+                            });
+
+                            console.log({
+                                event: "conflict",
+                                result: false,
+                                gestures: [test, gesture]
+                            });
+                        }
+
+                        saveAndExit();
+                    });
+                });
+                
+            })(window, document, jQuery);
+        </script>
+        
+    </head>
+    <body>
+        
+        <div id="intro" class="centered">
+            <!--<h1>You will see 2 short video loops in the following.</h1>-->
+            <h1>You will see 2 images in the following.</h1>
+            <h1>Please determine if they are representations of the same underlying gesture.</h1>
+            <button id="start" class="hidden">Start</button>
+        </div>
+        <div id="task-container" class="hidden">
+            <div id="please-wait" class="centered hidden">
+                <h1>Your task is not ready yet.</h1>
+                <h1>You can go on and do something else while we prepare the task. Just leave this tab open, we'll notify you once it's ready.</h1>
+                <h1>Thank you!</h1>
+            </div>
+            <div id="task" class="centered hidden">
+                <h1>
+                    <!--Please wait for a video to appear on the left.<br />
+                    Does it represent the same gesture as on the right?-->
+                    Does the image on the left represent the same gesture as on the right?
+                </h1>
+                <div id="gestures">
+                    <video autoplay id="video-stream" class="hidden"></video>
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAADhCAQAAADYdUAgAAABn0lEQVR42u3SQREAAAjDMOZf9DDBi0sk9Jp24FyMhbEwFsYCY2EsjAXGwlgYC4yFsTAWGAtjYSwwFsbCWGAsjIWxwFgYC2OBsTAWxgJjYSyMBcbCWBgLjIWxMBYYC2NhLDAWxsJYYCyMhbHAWBgLY4GxMBbGAmNhLIwFxsJYGAuMhbEwFhgLY2EsMBbGwlhgLIyFscBYGAtjgbEwFsYCY2EsjAXGwlgYC4yFsTAWGAtjYSyMJQLGwlgYC4yFsTAWGAtjYSwwFsbCWGAsjIWxwFgYC2OBsTAWxgJjYSyMBcbCWBgLjIWxMBYYC2NhLDAWxsJYYCyMhbHAWBgLY4GxMBbGAmNhLIwFxsJYGAuMhbEwFhgLY2EsMBbGwlhgLIyFscBYGAtjgbEwFsYCY2EsjAXGwlgYC4yFsTAWGAtjYSwwFsbCWBjLWBgLY2EsMBbGwlhgLIyFscBYGAtjgbEwFsYCY2EsjAXGwlgYC4yFsTAWGAtjYSwwFsbCWGAsjIWxwFgYC2OBsTAWxgJjYSyMBcbCWBgLjIWxMBYYC2PxygLfYMEvAM9KBQAAAABJRU5ErkJggg==" id="current-gesture" />
+                    <img src="" id="sample-gesture" />
+                </div>
+                <div id="buttons">
+                    <button id="yes">Yes</button>
+                    <button id="no">No</button>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

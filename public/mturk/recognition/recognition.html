@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <title>Recognition Task</title>
+    <!-- Custom stylesheet -->
+    <link href="css/style.default.css" rel="stylesheet" id="theme-stylesheet">
+    <!-- Bootstrap Core CSS -->
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
+    <!-- URI management -->
+    <script src="lib/URI.min.js"></script>
+    <!-- Our custom JS -->
+    <script src="/.common/require.js"></script>
+    <script src="/.common/webRTC.js"></script>
+    <script src="/.common/mturk.js"></script>
+    <script src="gestures.js"></script>
+    <script src="recognition.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <!-- Navigation
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/index.html">Instructions</a>
+            </div>
+
+        </div>
+
+    </nav>-->
+    <!-- Page Content -->
+    <div id="overlay" class="correct">gesture</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-3 instruction">
+                <h3 id="title">Gesture <span class="bold" id="gestureNum">1</span>/<span id="gestureTotal"></span></h3>
+                <p class="lead" id="instructions" text-align="left">Select the gesture on the right that most closely resembles the gesture below.</p>
+                <p class="lead hidden" id="startbtn-container" text-align="left">Please click "Start" as soon as you're ready.<br/><br/>
+                    <button align="center" type="button" class="btn btn-primary" id="startbtn">Start Task</button>
+                </p>
+                <video autoplay id="video-stream" class="hidden thumbnail"></video>
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAEsCAQAAABHvi1JAAACM0lEQVR42u3TMQEAAAgDINc/9Ezg5wkdSDvAIYKAICAICAKCgCAgCAgCgoAggCAgCAgCgoAgIAgIAoKAICAIIAgIAoKAICAICAKCgCAgCCAICAKCgCAgCAgCgoAgIAgIAggCgoAgIAgIAoKAICAICAIIAoKAICAICAKCgCAgCAgCggCCgCAgCAgCgoAgIAgIAoIAgoAgIAgIAoKAICAICAKCgCCAICAICAKCgCAgCAgCgoAgIIggIAgIAoKAICAICAKCgCAgCCAICAKCgCAgCAgCgoAgIAgIAggCgoAgIAgIAoKAICAICAIIAoKAICAICAKCgCAgCAgCggCCgCAgCAgCgoAgIAgIAoIAgoAgIAgIAoKAICAICAKCgCCAICAICAKCgCAgCAgCgoAggCAgCAgCgoAgIAgIAoKAICAIIAgIAoKAICAICAKCgCAgCAgiCAgCgoAgIAgIAoKAICAICAIIAoKAICAICAKCgCAgCAgCggCCgCAgCAgCgoAgIAgIAoIAgoAgIAgIAoKAICAICAKCgCCAICAICAKCgCAgCAgCgoAggCAgCAgCgoAgIAgIAoKAICAIIAgIAoKAICAICAKCgCAgCCAICAKCgCAgCAgCgoAgIAgIAggCgoAgIAgIAoKAICAICAKCCAKCgCAgCAgCgoAgIAgIAoIAgoAgIAgIAoKAICAICAKCgCCAICAICAKCgCAgCAgCgoAggCAgCAgCgoAgIAgIAoKAICAIIAgIAn8WHp1W8/6XGusAAAAASUVORK5CYII=" class="thumbnail img-responsive" id="current-gesture">
+                <p class="lead hidden" id="score-container">
+                    <strong>Score:</strong> <span id="score"></span><br /><br />
+                    # other players: <span id="workers"></span>
+                </p>
+                <p class="lead hidden" id="finishbtn-container">
+                    <button align="center" type="button" class="btn" id="finishbtn">Finish Task</button>
+                </p>
+            </div>
+            <div id="gestures-container" class="col-xs-9"></div>
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container -->
+</body>
+
+</html>

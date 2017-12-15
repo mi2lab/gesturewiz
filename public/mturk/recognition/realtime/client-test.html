@@ -1,0 +1,18 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <title>real$1-client Test</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+        <script src="js/real$1-client.js"></script>
+        <script>
+            const real$1Client = new Real$1Client("laber").ongesture(function(response) {
+                console.log(response);
+                $("body").html(JSON.stringify(response));
+            });
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>

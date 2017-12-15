@@ -1,0 +1,249 @@
+/* animations */
+
+@keyframes pulse {
+  0% {
+    background-color: red;
+  }
+  50% {
+    background-color: white;
+  }
+    100% {
+        background-color: red;
+    }
+}
+
+/* elements */
+
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    vertical-align: top;
+}
+
+button, input[type="submit"], label {
+    cursor: pointer;
+}
+
+form {
+    display: inline;
+}
+
+input[type="range"] {
+    vertical-align: middle;
+}
+
+select {
+    margin-left: 5px;
+}
+
+td {
+    font-size: 14px;
+}
+
+video {
+    position: absolute;
+    /*left: -9999px;
+    top: -9999px;*/
+    right: 0px;
+    bottom: 0px;
+}
+
+/* IDs */
+
+#container-left {
+    width: 424px;
+}
+
+#container-right {
+    padding-left: 1.5em;
+    width: calc(100% - 424px - 1.5em - 16px);
+}
+
+#sketchpad {
+    height: 320px;
+    width: 422px;
+    border: 1px #666 solid;
+    margin-bottom: 5px;
+    position: relative;
+    /* Necessary for correct mouse co-ords in Firefox */
+}
+
+#slider-container {
+    color: #ccc;
+    margin-top: 10px;
+}
+
+#submit {
+    margin-left: 10px;
+}
+
+#toggle-record {
+    margin-top: 10px;
+}
+
+/* classes */
+
+.animated {
+    animation: pulse 1s infinite;
+    -moz-animation: pulse 1s infinite;
+    -webkit-animation: pulse 1s infinite;
+}
+
+.box {
+    padding: 10px;
+    margin-bottom: 5px;
+    border: 1px #666 solid;
+}
+
+.btn-lg {
+    font-family: Arial;
+    font-size: 15px;
+    padding: 10px;
+    -webkit-appearance: none;
+    background: white;
+    border: 1px #666 solid;
+    text-align: center;
+    margin-bottom: 3px;
+    color: black;
+}
+
+.btn-lg[disabled] {
+    border: 1px #ccc solid;
+    color: #ccc;
+}
+
+.canvas {
+    width: 400px;
+    margin-bottom: 5px;
+}
+
+.circle {
+    display: inline-block;
+    height: 10px;
+    width: 10px;
+    background: red;
+    border-radius: 100%;
+}
+
+.close {
+    color: #666;
+    cursor: pointer;
+}
+
+.container {
+    display: inline-block;
+    float: left;
+    
+    /* Prevent nearby text being highlighted when accidentally dragging mouse outside confines of the canvas */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.container-outer {
+    display: inline-block;
+    float: left;
+    margin-bottom: 20px;
+}
+
+.gesture-container {
+    display: inline-block;
+    float: left;
+    position: relative;
+}
+
+.gesture-container > .fa-stack {
+    bottom: 0;
+    color: #c0392b;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+}
+
+.gesture-data {
+    font-size: 75%;
+    padding: 2px;
+    width: 150px;
+}
+
+.gesture {
+    border: 2px #ccc solid;
+    cursor: pointer;
+    margin: 0 .5em .5em 0;
+    width: 150px;
+}
+
+.green {
+    color: limegreen;
+}
+
+.hidden {
+    display: none;
+}
+
+.highlighted {
+    outline: 2px rgb(46, 204, 113) solid;
+}
+
+.input {
+    margin-left: 55px;
+}
+
+.overlay {
+    background-color: #fff;
+    height: 100%;
+    left: 0;
+    opacity: .75;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 9998;
+}
+
+.overlay-results {
+    background-color: #fff;
+    border: 1px #000 solid;
+    left: 50%;
+    padding: 1em;
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    z-index: 9999;
+}
+
+.red {
+    color: red;
+}
+
+.results-table {
+    border-collapse: collapse;
+}
+
+.results-table td {
+    border: 1px #000 solid;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.right {
+    text-align: right;
+}
+
+.selected {
+    border: 2px rgb(22, 160, 133) solid;
+}
+
+.separator-10px {
+    display: inline-block;
+    height: 1px;
+    width: 10px;
+}
+
+.title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Slideshow</title>
+    <meta name="viewport" content="target-densitydpi=device-dpi, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width" />
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            font-size: 90%;
+        }
+        
+        body {
+            background: #000;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        #container {
+            height: 100%;
+        }
+        
+        #slides {
+            position: absolute;
+            left: 25%;
+            right: 25%;
+            top: 25%;
+        }
+        
+        .slide {
+            width: 950px;
+            height: 600px;
+            display: none;
+        }
+        
+        .selected {
+            display: block;
+        }
+        
+        .preview {
+            color: #fff;
+            border: 1px solid #000;
+        }
+        
+        .preview img {
+            width: 240px;
+            height: 180px;
+        }
+        
+        .left {
+            position: absolute;
+            left: 0px;
+            top: 45%;
+        }
+        
+        .right {
+            position: absolute;
+            right: 5px;
+            top: 45%;
+        }
+        
+        .label {
+            width: 240px;
+            font-size: 96px;
+            line-height: 180px;
+            text-align: center;
+            font-weight: bold;
+            color: RGBa(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+        
+        #slidenum {
+            color: white;
+            font-size: 48px;
+            position: absolute;
+            left: 45%;
+            top: 15px;
+        }
+    </style>
+    <!-- include jQuery -->
+    <script type="text/javascript" src="//code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="prevslide" class="preview">
+            <img class="preview left">
+            <div class="label left">&lt;</div>
+        </div>
+
+        <div id="slides">
+            <img class="slide" src="slideshow_files/1.jpg">
+            <img class="slide" src="slideshow_files/2.jpg">
+            <img class="slide" src="slideshow_files/3.jpg">
+            <img class="slide" src="slideshow_files/4.jpg">
+            <img class="slide" src="slideshow_files/5.jpg">
+            <img class="slide" src="slideshow_files/6.jpg">
+        </div>
+
+        <div id="nextslide" class="preview">
+            <img class="preview right">
+            <div class="label right">&gt;</div>
+        </div>
+
+        <div id="slidenum"></div>
+    </div>
+
+    <script>
+        function selectSlide(sel) {
+            var $selected = $('.selected'),
+                $sel = $(sel)
+
+            if ($sel.length) {
+                $selected.removeClass('selected')
+
+                $sel.addClass('selected')
+                $('#slidenum').text('Slide ' + ($sel.index() + 1) + ' / ' + $('#slides').children().length)
+
+                var $prev = $sel.prev(),
+                    $next = $sel.next()
+
+                $('#prevslide .preview').attr('src', $prev.length ? $prev.attr('src') : $('#slides').children().last().attr('src'))
+
+                $('#nextslide .preview').attr('src', $next.length ? $next.attr('src') : $('#slides').children().first().attr('src'))
+            }
+        }
+
+        function firstSlide() {
+            selectSlide($('#slides').children().first())
+        }
+
+        function lastSlide() {
+            selectSlide($('#slides').children().last())
+        }
+
+        function nextSlide() {
+            var $next = $('.selected').next()
+            selectSlide($next.length ? $next : $('#slides').children().first())
+        }
+
+        function prevSlide() {
+            var $prev = $('.selected').prev()
+            selectSlide($prev.length ? $prev : $('#slides').children().last())
+        }
+
+        /* THE REAL SHIT */
+        $(function () {
+            firstSlide()
+
+            $('#nextslide').on('click', nextSlide)
+
+            $('#prevslide').on('click', prevSlide)
+
+            /* gestureToCommandMap: expects nextSlide/prevSlide/firstSlide/lastSlide gestures */
+            var gestureToCommandMap = window.gestureToCommandMap = {
+                // next/prev slide gestures
+                "0": nextSlide,
+                "1": prevSlide,
+
+                // next/prev slide gestures
+                "2": nextSlide,
+                "3": prevSlide,
+
+                // next/prev slide gestures
+                "4": nextSlide,
+                "5": prevSlide,
+
+                // first/last slide gestures
+                "6": firstSlide,
+                "7": lastSlide,
+
+                // first/last slide gestures
+                "8": firstSlide,
+                "9": lastSlide,
+
+                // first/last slide gestures
+                "10": firstSlide,
+                "11": lastSlide,
+
+                // $1 gestures
+                "leftsquarebracket": prevSlide,
+                "rightsquarebracket": nextSlide,
+                "circle": firstSlide,
+                "arrow": lastSlide
+            };
+        })
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="../js/real$1-client.js"></script>
+    <script>
+        const real$1Client = new Real$1Client("slideshow").on("gesture", function (response) {
+            console.log(response);
+
+            try {
+                gestureToCommandMap[response[0].gesture]();
+            }
+            catch (e) {
+                console.log(e);
+            }
+        });
+    </script>
+</body>
+
+</html>

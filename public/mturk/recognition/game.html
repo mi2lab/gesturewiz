@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Gesture Task Instructions</title>
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!-- Custom stylesheet -->
+    <link href="css/style.default.css" rel="stylesheet" id="theme-stylesheet" />
+    <!-- Bootstrap Core CSS -->
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" />
+    <!-- URI management -->
+    <script src="lib/URI.min.js"></script>
+    <!--Our custom JS-->
+    <script src="gesturerecognition.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        body {
+            padding-top: 70px;
+            /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
+        }
+    </style>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <!-- Navigation 
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display 
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a class="navbar-brand" href="index.html">Instructions</a> </div>
+            <!-- /.navbar-collapse 
+        </div>
+        <!-- /.container 
+    </nav> -->
+    <!-- Page Content -->
+    <div class="container">
+        <div class="row">
+            <h1>Recognize the Gesture!</h1>
+            <p class="lead">Thank you for your interest in this task! You will be playing a little gesture recognition game against other workers.</p>
+            <p>The goal is to recognize the gestures that appear on the left <em>as fast as possible</em> by selecting the correct match from the right side.</p>
+            <p>For each correctly identified gesture, you win a star and a <strong>bonus</strong> of $0.01. However, the other players see the same gestures and can steal them from you.</p>
+            <p>You can earn a maximum of <strong>$0.25</strong> with this task. Have fun! :-)</p><br /><br />
+            <p id="preview" class="hidden">Please <em>accept</em> this task to continue.</p>
+            <p><a href="recognition.html" id="next" class="btn btn-primary btn-lg active hidden" role="button">Start Game</a></p>
+        </div>
+    </div>
+    <!-- /.container -->
+    <script>
+        $(function () {
+            // get worker id etc.
+            var q = URI().query(true);
+
+            if (q.assignmentId && q.assignmentId !== "ASSIGNMENT_ID_NOT_AVAILABLE") {
+                $("#next").removeClass("hidden");
+            }
+            else {
+                $("#preview").removeClass("hidden");
+            }
+
+            // pass on MTurk query parameters
+            $("#next").attr("href", "recognition.html" + location.search)
+        });
+    </script>
+</body>
+
+</html>

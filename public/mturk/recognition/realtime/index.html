@@ -1,0 +1,171 @@
+<!--
+
+Based on:
+
+* http://stackoverflow.com/questions/37838044/record-canvas-drawing-as-animated-gif
+* https://zipso.net/sketchpad/sketchpad-lines.html
+* https://github.com/antimatter15/jsgif
+
+-->
+<html>
+
+<head>
+    <title>Gesture Recorder</title>
+    <!-- JS -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="../lib/URI.min.js"></script>
+    <script type="text/javascript" src="js/LZWEncoder.js"></script>
+    <script type="text/javascript" src="js/NeuQuant.js"></script>
+    <script type="text/javascript" src="js/GIFEncoder.js"></script>
+    <script type="text/javascript" src="js/b64.js"></script>
+    <script type="text/javascript" src="js/kinect.js"></script>
+    <!-- include our own JS last, because dependencies -->
+    <script src="/.common/require.js"></script>
+    <script src="/.common/webRTC.js"></script>
+    <script src="/.common/mturk.js"></script>
+    <script src="js/real$1.js"></script>
+    <script src="js/realtime.js"></script>
+    <script src="../gestures.js"></script>
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
+    <!-- include our own CSS last, because dependencies -->
+    <link rel="stylesheet" href="main.css" />
+</head>
+
+<body>
+    <div id="container-left" class="container">
+        <div class="box">
+            <p class="title">Results</p>
+            <!--Total number of workers: <span id="num-workers-total" style="font-weight: bold"></span><br /><br />-->
+            Detected gesture: <span id="winners" style="font-weight: bold"></span><br />
+            Time since gesture end: <span id="time-end" style="font-weight: bold"></span><br /><br />
+            Current number of workers in channel: <span id="num-workers-channel" style="font-weight: bold"></span>
+            <!--<p class='small'> Time since HIT: </p><span id="time-hit"></span><br />
+            <p class='small'> Time since gesture start:</p> <span id="time-start"></span><br />-->
+        </div>
+        <div id="sketchpadapp">
+            <canvas id="sketchpad" height="300" width="400"></canvas>
+        </div>
+        <!--<div class="canvas_details" style="font-weight: bold">Detected gestures: <span id="detected-gesture"></span></div>
+        <br/>-->
+        <div class="box">
+            <p class="title">Mode</p>
+            <div class="input">
+                <form>
+                    <input type="radio" name="mode" value="recognize" id="mode-recognize" />
+                    <label for="mode-recognize">Recognize</label>
+                    <input type="radio" name="mode" value="create" id="mode-create" checked />
+                    <label for="mode-create">Record</label>
+                </form>
+                <br />
+                <!--            <input type="button" value="Reset Canvas" class="btn-lg" id="clearbutton" />-->
+                <div id="slider-container"> Fast
+                    <input id="accuracy" type="range" min="1" max="5" step="2" value="1" disabled /> Accurate
+                </div><br />
+                <button id="toggle-record" class="btn-lg"><span class="circle"></span>
+                    <span id="recording-status">Start</span>
+                </button>
+                <button id="save" class="btn-lg"><i class="fa fa-floppy-o"></i>
+                    Save
+                </button>
+            </div>
+        </div>
+        <div class="box">
+            <p class="title">Input</p>
+            <div class="input">
+                <!--<button id="toggle-video" class="btn-lg" style="width:85.53px;">Video</button>-->
+                <form>
+                    <input type="radio" name="input" value="mouse" id="mouse" checked/>
+                    <label for="mouse">Mouse/Touch</label>
+                    <br>
+                    <input type="radio" name="input" value="kinect" id="kinect" />
+                    <label for="kinect">Kinect</label>
+                    <br>
+                    <input type="radio" name="input" value="video" id="video" />
+                    <label for="video">Video</label>
+                    <form>
+                        <select name="camera">
+                            <option value="Camera">Camera</option>
+                        </select>
+                    </form>
+                </form>
+            </div>
+        </div>
+        <div class="box">
+            <p class="title">Mechanical Turk Configuration</p>
+            <div class="input">
+                <table border="0">
+                    <tr>
+                        <td>API Key:</td>
+                        <td>
+                            <input type="text" id="api-key" /> </td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Secret:</td>
+                        <td>
+                            <input type="text" id="secret" /> </td>
+                        <td>
+                            <input type="button" value="Submit" id="submit" /> </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr>
+                        <td>Sandbox:</td>
+                        <td><input type="checkbox" id="sandbox" checked="checked" /></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Worker UI:</td>
+                        <td>
+                            <select name="worker-ui">
+                                <option value="classic" selected>Classic</option>
+                                <option value="1vs1">1 vs. 1</option>
+                        </select>
+                        </td>
+                        <td></td>
+                    </tr>
+                </table><br />
+                <button id="toggle-mturk" class="btn-lg"><span class="circle"></span>
+                    <span id="mturk-status">Start Recognizer</span>
+                </button><br />
+                <button id="conflict-checker" class="btn-lg"><span class="circle"></span>
+                    <span id="checker-status">Start Conflict Checker</span>
+                </button>
+                <button id="conflict-checker-results" class="btn-lg">
+                    Results
+                </button>
+            </div>
+            <!--<input type="button" value="Create HITs" class="btn-lg" id="hitbutton" />
+            <input type="button" value="Delete HITs" class="btn-lg" id="deletehits" />-->
+        </div>
+        <!--<div class="box">
+            <p class="title">Conflict Checker</p>
+            <div class="input">
+                <button id="conflict-checker" class="btn-lg">
+                    Start Conflict Checker
+                </button>
+                <button id="conflict-checker-results" class="btn-lg">
+                    Results
+                </button>
+            </div>
+        </div>-->
+    </div>
+    <div id="container-right" class="container">
+        <span id="status" class="hidden"></span>
+        <p class="title">Gesture Set: <span id="name">[undefined]</span></p><br /><br />
+        <div id="gesture-set"></div>
+    </div>
+    <video id="camera" height="200" width="300"></video>
+    <div class="overlay hidden"></div>
+    <div class="overlay-results hidden">
+        <div class="right" style="margin-bottom: 1em;"><i class="fa fa-times fa-2x close"></i></div>
+        <div class="results-hint">No results available yet.</div><br />
+        <table class="results-table" border="0" cellpadding="5" cellspacing="0">
+        </table>
+    </div>
+</body>
+
+</html>

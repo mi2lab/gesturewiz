@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Maps</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        html,
+        body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        
+        body {
+            background: #fff;
+            color: #000;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            overflow: hidden;
+        }
+        
+        #wrapper {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #map_canvas {
+            height: 100%;
+        }
+        
+        #overlay {
+            z-index: 999;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        
+        #locations {
+            background: white;
+            position: absolute;
+            bottom: 100px;
+            right: 15px;
+            width: 250px;
+            height: 175px;
+            z-index: 999;
+        }
+        
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        li {
+            padding: 8px;
+            cursor: pointer;
+        }
+        
+        li:hover {
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .spacer {
+            height: 5px;
+        }
+    </style>
+    <script src="//code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="../../lib/URI.min.js"></script>
+    <script src="../../lib/URI.fragmentQuery.js"></script>
+</head>
+
+<body>
+    <div id="wrapper">
+        <div id="map_canvas"></div>
+        <div id="overlay"></div>
+        <div id="locations">
+            <ul>
+                <li data-latlng="46.856347,-71.4161117" data-z="12">Quebec City, Canada (UIST'17)</li>
+                <li data-latlng="35.6733227,139.6403489" data-z="12">Tokyo, Japan (UIST'16)</li>
+                <li data-latlng="35.2031535,-80.8395259" data-z="11">Charlotte, NC, USA (UIST'15)</li>
+                <li data-latlng="21.3280681,-157.7989705" data-z="12">Honolulu, HI, USA (UIST'14)</li>
+                <li data-latlng="56.3365328,-2.8077762" data-z="14">St. Andrews, UK (UIST'13)</li>
+            </ul>
+        </div>
+    </div>
+    <script>
+        var map
+
+        function LatLngFromString(s) {
+            var latlng = typeof s === 'string' ? s.split(/,\s*/) : []
+            if (latlng.length == 2) return new google.maps.LatLng(parseFloat(latlng[0]), parseFloat(latlng[1]))
+            return null
+        }
+
+        function updateHash(updateCenter, updateZoom, updateMapTypeId) {
+            var url = URI(window.location.href),
+                f = {}
+
+            if (updateCenter) f.latlng = map.getCenter().toUrlValue()
+            if (updateZoom) f.z = map.getZoom()
+
+            if (updateMapTypeId)
+                f.mt = map.getMapTypeId()
+
+            location.hash = url.fragment(f).hash()
+        }
+
+        function updateMap(options) {
+            var center = LatLngFromString(options.latlng) || map.getCenter(),
+                zoom = parseInt(options.z) || map.getZoom(),
+                mapTypeId = options.mt || map.getMapTypeId()
+
+            if (!map.getCenter().equals(center)) {
+                map.setCenter(center)
+                console.log('update center: ', center.toString())
+            }
+
+            if (!map.getZoom() != zoom) {
+                map.setZoom(zoom)
+                console.log('update zoom: ', zoom)
+            }
+
+            if (map.getMapTypeId() != mapTypeId) {
+                map.setMapTypeId(mapTypeId)
+                console.log('update maptypeid: ', mapTypeId)
+            }
+        }
+
+        function init() {
+            var url = URI(window.location.href),
+                f = url.fragment(true),
+                map_options = {
+                    center: LatLngFromString(f.latlng) || LatLngFromString($('li').eq(0).data('latlng')),
+                    zoom: parseInt(f.z) || parseInt($('li').eq(0).data('z')),
+                    mapTypeId: f.mt || google.maps.MapTypeId.ROADMAP,
+                    streetViewControl: false
+                }
+
+            infowindow = new google.maps.InfoWindow()
+
+            map = new google.maps.Map(document.getElementById('map_canvas'), map_options)
+
+            /*
+            //FIXME this partial updates don't seem to work...
+            google.maps.event.addListener(map, 'center_changed', function () {
+                updateHash(true)
+            })
+            google.maps.event.addListener(map, 'zoom_changed', function () {
+                updateHash(false, true)
+            })
+            */
+
+            google.maps.event.addListener(map, 'bounds_changed', function () {
+                updateHash(true, true)
+            })
+
+            /*google.maps.event.addListener(map, 'maptypeid_changed', function () {
+                updateHash(false, false, true)
+            })*/
+        }
+
+        function zoomIn() {
+            map.setZoom(map.getZoom() + 1)
+        }
+
+        function zoomOut() {
+            map.setZoom(map.getZoom() - 1)
+        }
+
+        $(function () {
+            $(window).on('hashchange', function (event) {
+                updateMap(URI(event.originalEvent.newURL).fragment(true))
+            })
+
+            $('li').on('click', function () {
+                updateMap($(this).data())
+            })
+
+            // zoom via +/- keys
+            $(window).keypress(function (e) {
+                if (e.key == '+') zoomIn()
+                else if (e.key == '-') zoomOut()
+            });
+
+            // expects sequence of 3 zoomIn/zoomOut gestures
+            var gestureToCommandMap = window.gestureToCommandMap = {
+                // zoomIn gesture
+                "0": zoomIn,
+
+                // zoomOut gesture
+                "1": zoomOut,
+
+                // zoomIn gesture
+                "2": zoomIn,
+
+                // zoomOut gesture
+                "3": zoomOut,
+
+                // zoomIn gesture
+                "4": zoomIn,
+
+                // zoomOut gesture
+                "5": zoomOut,
+
+                // zoomIn gesture
+                "6": zoomIn,
+
+                // zoomOut gesture
+                "7": zoomOut
+            };
+
+            // TODO: call real$1 and execute command
+        })
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="../js/real$1-client.js"></script>
+    <script>
+        const real$1Client = new Real$1Client("maps").ongesture(function (response) {
+            console.log(response);
+
+            try {
+                gestureToCommandMap[response[0].gesture]();
+            }
+            catch (e) {
+                console.log(e);
+            }
+        });
+    </script>
+    <!-- Finally load Maps API and call init() -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDX_Up0za7WRBVk8oM8IQXL4nnBUGqAgio&libraries=places&callback=init"></script>
+</body>
+
+</html>

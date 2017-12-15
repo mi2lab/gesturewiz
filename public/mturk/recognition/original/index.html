@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The Original $1 Gesture Recognizer</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="dollar.js"></script>
+        <script src="testSet.js"></script>
+        <script>
+            var convertGestures = function(testSet, limit) {
+                var testSetConverted = [];
+                
+                limit = limit || 1;
+                
+                for (var i=0; i<testSet.length; ++i) {
+                    var entry = {
+                        gesture: testSet[i].gesture,
+                        points: []
+                    }
+                    
+                    var l = Math.round(limit * testSet[i].points.length);
+                    
+                    for (var j=0; j<l; ++j) {
+                        entry.points.push(
+                            new Point(
+                                testSet[i].points[j].x,
+                                testSet[i].points[j].y
+                            )
+                        );
+                    }
+                    
+                    testSetConverted.push(entry);
+                }
+                
+                return testSetConverted;
+            };
+            
+            var recognizeGestures = function(testSet) {
+                var r = new DollarRecognizer();
+                var results = [];
+                
+                for (var i=0; i<testSet.length; ++i) {
+                    var resultObj= {
+                        gesture: testSet[i].gesture,
+                        result: r.Recognize(testSet[i].points)
+                    };
+                    
+                    console.log(resultObj);
+                    results.push(resultObj);
+                }
+                
+                return results;
+            };
+            
+            var gesturesOneThird = convertGestures(TEST_SET, 1/3);
+            var gesturesTwoThirds = convertGestures(TEST_SET, 2/3);
+            var gesturesComplete = convertGestures(TEST_SET);
+            
+            var testSets = [
+                {
+                    name: "33% Gestures",
+                    results: recognizeGestures(gesturesOneThird)
+                },
+                {
+                    name: "67% Gestures",
+                    results: recognizeGestures(gesturesTwoThirds)
+                },
+                {
+                    name: "100% Gestures",
+                    results: recognizeGestures(gesturesComplete)
+                }
+            ];
+            
+            $(function() {
+                for (var i=0; i<testSets.length; ++i) {
+                    $("#results")
+                        .append("<tr><th colspan='3'>" + testSets[i].name + "</th></tr>")
+                        .append("<tr><th>To be detected</th><th>$1 Recognizer result</th><th>Score</th></tr>");
+                    
+                    for (var j=0; j<testSets[i].results.length; ++j) {
+                        $("#results").append(
+                            "<tr>" +
+                                "<td>" + testSets[i].results[j].gesture + "</td>" +
+                                "<td>" + testSets[i].results[j].result.Name + "</td>" +
+                                "<td>" + testSets[i].results[j].result.Score + "</td>" +
+                            "</tr>"
+                        );
+                    }
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <table id="results">
+        </table>
+    </body>
+</html>

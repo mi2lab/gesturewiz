@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Youtube</title>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet">
+    <style>
+        html,
+        body {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        body {
+            background: #f1f1f1;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        
+        #wrapper,
+        .player-controls {
+            padding: 15px;
+            background: #1b1b1b;
+            color: #999;
+        }
+        
+        #playback {
+            position: absolute;
+            bottom: 0px;
+            width: 450px;
+            height: 50px;
+        }
+        
+        #playlist {
+            background: #222;
+            color: #888;
+            position: absolute;
+            right: 0px;
+            bottom: 0px;
+            height: 150px;
+        }
+        
+        .controls {
+            padding: 5px;
+        }
+        
+        a {
+            border: none;
+            font-size: 120%;
+            background: transparent;
+            color: #999;
+            text-decoration: none;
+            padding: 5px;
+        }
+        
+        #time {
+            color: #fff;
+        }
+        
+        #title {
+            color: #fff;
+            padding: 10px;
+            font-size: 120%;
+            border-bottom: 1px solid #999;
+        }
+        
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        li {
+            padding: 10px;
+            cursor: pointer;
+        }
+        
+        li:hover {
+            color: #999;
+            background-color: #525252;
+        }
+        
+        li.playing {
+            background-color: #3a3a3a;
+        }
+    </style>
+    <script src="//code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="../../lib/URI.min.js"></script>
+    <script src="../../lib/URI.fragmentQuery.js"></script>
+</head>
+
+<body>
+    <div id="wrapper">
+        <div id="player"></div>
+        <div id="playback" class="player-controls">
+            <a id="play-button" class="play" href="javascript:"><i class="fa fa-fw fa-play"></i></a>
+            <a id="volume-button" class="volume" href="javascript:"><i class="fa fa-fw fa-volume-up"></i></a>
+            <a id="backward-button" class="backward" href="javascript:"><i class="fa fa-fw fa-backward"></i></a>
+            <a id="forward-button" class="forward" href="javascript:"><i class="fa fa-fw fa-forward"></i></a>
+            <span id="time"></span> / <span id="duration"></span>
+            <div id="title"></div>
+        </div>
+        <div id="playlist" class="player-controls">
+            <div class="controls"> <a class="previous" href="javascript:"><i class="fa fa-fw fa-caret-square-o-up"></i>
+                </a> <a class="next" href="javascript:"><i class="fa fa-fw fa-caret-square-o-down"></i>
+                </a> </div>
+            <ul id="videos">
+                <li data-v="UgqVyVKkp_s">CHI 2017 Closing Ceremony &amp; Welcome from the CHI 2018 chairs</li>
+                <li data-v="er-1Se-ofn8">UIST 2016 Opening Remarks</li>
+                <li data-v="xN3kqw6elsA">UIST 2016 Closing Remarks</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        var player, duration, playerReady = false
+
+        function onYouTubeIframeAPIReady() {
+            var url = URI(window.location.href),
+                f = url.fragment(true)
+            player = new YT.Player('player', {
+                height: window.innerHeight,
+                width: window.innerWidth,
+                videoId: f.v || $('li').eq(0).data('v'),
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            })
+        }
+
+        function onPlayerReady(event) {
+            var url = URI(window.location.href),
+                f = url.fragment(true)
+            playerReady = true
+            updatePlayer(f)
+            setInterval(function () {
+                var time = getTime()
+                updateHash(false, time, false)
+                $('#time').text(prettyTime(time))
+                $('#duration').text(prettyTime(duration))
+            }, 250)
+        }
+
+        function onPlayerStateChange(event) {
+            var playing = event.data == YT.PlayerState.PLAYING
+            $('.play').find('i').toggleClass('fa-pause', playing).toggleClass('fa-play', !playing)
+            duration = (player && player.getDuration) ? player.getDuration() : 0
+            var videoId = getVideoId(),
+                video = $('li[data-v=' + videoId + ']'),
+                playing = $('li.playing'),
+                updateTime = false
+            if (video[0] != playing[0]) {
+                playing.removeClass('playing')
+                video.addClass('playing')
+                $('#title').text(video.text())
+            }
+            updateHash(videoId, getTime(), event.data)
+        }
+
+        function updateHash(updateVideo, updateTime, updatePlayerState) {
+            var url = URI(window.location.href),
+                f = url.fragment(true)
+            if (updateVideo !== false) f.v = updateVideo
+            if (updateTime !== false) f.t = updateTime
+            if (updatePlayerState !== false) f.ps = updatePlayerState
+            location.hash = url.fragment(f).hash()
+        }
+
+        function updatePlayer(options) {
+            if (!playerReady) return
+            if (options.v && options.v != getVideoId()) player.loadVideoById(options.v)
+            if (options.t && Math.abs(options.t - getTime()) > 2) {
+                player.seekTo(options.t, true)
+                player.playVideo()
+            }
+            if (options.ps && options.ps != player.getPlayerState()) {
+                if (options.ps == YT.PlayerState.PLAYING) player.playVideo()
+                else if (options.ps == YT.PlayerState.PAUSED) player.pauseVideo()
+            }
+        }
+
+        function getVideoId() {
+            var uri = URI
+            return (player && player.getVideoUrl) ? URI(player.getVideoUrl()).query(true).v : ''
+        }
+
+        function getTime() {
+            return (player && player.getCurrentTime) ? player.getCurrentTime() : 0
+        }
+
+        function prettyTime(time) {
+            if (typeof time !== 'number') {
+                return '0:00'
+            }
+            // Minutes and seconds
+            time = Math.floor(time)
+            var mins = ~~(time / 60)
+            var secs = time % 60
+                // Output like "1:01" or "4:03:59" or "123:03:59"
+            ret = mins + ":" + (secs < 10 ? "0" : "")
+            ret += "" + secs
+            return ret
+        }
+        $(function () {
+            $(window).on('hashchange', function (event) {
+                var uri = URI
+                updatePlayer(URI(event.originalEvent.newURL).fragment(true))
+            })
+
+            $('#playlist li').on('click', function () {
+                player.loadVideoById($(this).data('v'))
+            })
+
+            function playVideo() {
+                player.playVideo()
+            }
+
+            function pauseVideo() {
+                player.pauseVideo()
+            }
+
+            function togglePlay() {
+                if ($(this).find('i').hasClass('fa-pause')) {
+                    pauseVideo()
+                }
+                else {
+                    playVideo()
+                }
+            }
+
+            function updateVolume() {
+                var muted = player.isMuted()
+                var icon = $('.volume').find('i')
+                icon.toggleClass('fa-volume-off', !muted).toggleClass('fa-volume-up', muted)
+            }
+
+            function mutePlayer() {
+                player.mute()
+                updateVolume()
+            }
+
+            function unmutePlayer() {
+                player.unMute()
+                updateVolume()
+            }
+
+            function toggleVolume() {
+                var muted = player.isMuted()
+                if (muted) {
+                    unmutePlayer()
+                }
+                else {
+                    mutePlayer()
+                }
+            }
+
+            function backwardVideo() {
+                var time = Math.max(0, getTime() - 30)
+                player.seekTo(time)
+            }
+
+            function forwardVideo() {
+                var time = Math.min(duration, getTime() + 30)
+                player.seekTo(time)
+            }
+
+            function prevVideo() {
+                var video = $('li.playing').prev()
+                if (!video.length) video = $('li').last()
+                player.loadVideoById(video.data('v'))
+            }
+
+            function nextVideo() {
+                var video = $('li.playing').next()
+                if (!video.length) video = $('li').first()
+                player.loadVideoById(video.data('v'))
+            }
+
+            $('.play').on('click', togglePlay)
+
+            $('.volume').on('click', toggleVolume)
+
+            $('.backward').on('click', backwardVideo)
+
+            $('.forward').on('click', forwardVideo)
+
+            $('.previous').on('click', prevVideo)
+
+            $('.next').on('click', nextVideo)
+
+            /* gestureToCommandMap: expects play/pause/mute/unmute/forward/backward/next/prev gestures */
+            var gestureToCommandMap = window.gestureToCommandMap = {
+                // mute gesture
+                "0": mutePlayer,
+
+                // unmute gesture
+                "1": unmutePlayer,
+
+                // forward gesture
+                "2": forwardVideo,
+
+                // backward gesture
+                "3": backwardVideo,
+
+                // next gesture
+                "4": nextVideo,
+
+                // prev gesture
+                "5": prevVideo
+            }
+        })
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="../js/real$1-client.js"></script>
+    <script>
+        const real$1Client = new Real$1Client("youtube").ongesture(function (response) {
+            console.log(response);
+
+            try {
+                gestureToCommandMap[response[0].gesture]();
+            }
+            catch (e) {
+                console.log(e);
+            }
+        });
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+
+</html>

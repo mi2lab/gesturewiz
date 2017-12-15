@@ -1,0 +1,96 @@
+video {
+    max-width: 100%;
+}
+
+/* add a little bottom space under the images */
+
+.thumbnail {
+    margin-bottom: 2px;
+}
+
+.instruction {
+    text-align: left;
+}
+
+.bold {
+    font-weight: 900;
+}
+
+.nopadding {
+    padding: 0;
+    margin: 0;
+}
+
+.col-md-8 {
+    padding: 0;
+}
+
+.col-sm-2 {
+    padding: 0;
+}
+
+.container {
+    max-width: 750px !important;
+}
+
+.correct {
+    background: rgba(39, 174, 96, .5);
+}
+
+.fa-star {
+    color: #f39c12;
+}
+
+.gray {
+    background-color: rgba(127, 140, 141, .5);
+}
+
+.hidden {
+    display: none;
+}
+
+.incorrect {
+    background-color: rgba(192, 57, 43, .5);
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+.lead {
+    font-size: 16px !important;
+}
+
+.padding-sm {}
+
+.padding-lg {}
+
+.gestureselect {
+    border: 1px solid dodgerblue;
+}
+
+#overlay {
+    color: #fff;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    padding: 5%;
+    z-index: 1000;
+    text-align: center;
+    font-size: 800%;
+    display: none;
+}
+
+#previewImg {
+    max-width: 80%;
+}
+
+#empty {
+    padding-top: 75px;
+}
+
+#gestures-container {
+    margin-top: .5em;
+}
