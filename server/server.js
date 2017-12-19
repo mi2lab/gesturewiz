@@ -13,9 +13,9 @@ const express = require('express'),
     _ = require('lodash'),
 
     // routes
-    analysis = require('./routes/analysis'),
-    gestures = require('./routes/gestures'),
-    mturk = require('./routes/mturk');
+    routeAnalysis = require('./routes/analysis'),
+    routeGestures = require('./routes/gestures'),
+    routeMturk = require('./routes/mturk');
 
 /*************
  * Cron Jobs *
@@ -254,20 +254,20 @@ expressApp.post('/saveImgTmp', function (req, res) {
     }));
 });
 
-expressApp.get('/analysis.csv', analysis.csv);
-expressApp.get('/1vs1.csv', analysis.onevsone);
-expressApp.get('/realtime.csv', analysis.realtime);
+expressApp.get('/analysis.csv', routeAnalysis.csv);
+expressApp.get('/1vs1.csv', routeAnalysis.onevsone);
+expressApp.get('/realtime.csv', routeAnalysis.realtime);
 
-expressApp.get('/gestures/get', gestures.get);
-expressApp.post('/gestures/delete', gestures.delete);
-expressApp.post('/gestures/save', gestures.save);
-expressApp.post('/gestures/saveBulk', gestures.saveBulk);
+expressApp.get('/gestures/get', routeGestures.get);
+expressApp.post('/gestures/delete', routeGestures.delete);
+expressApp.post('/gestures/save', routeGestures.save);
+expressApp.post('/gestures/saveBulk', routeGestures.saveBulk);
 
-expressApp.post('/mturk/balance', mturk.balance);
-expressApp.post('/mturk/grantBonus', mturk.grantBonus);
-expressApp.post('/mturk/simpleQuestion', mturk.simpleQuestion);
-expressApp.post('/mturk/externalQuestion', mturk.externalQuestion);
-expressApp.post('/mturk/deleteHITs', mturk.deleteHITs);
+expressApp.post('/mturk/balance', routeMturk.balance);
+expressApp.post('/mturk/grantBonus', routeMturk.grantBonus);
+expressApp.post('/mturk/simpleQuestion', routeMturk.simpleQuestion);
+expressApp.post('/mturk/externalQuestion', routeMturk.externalQuestion);
+expressApp.post('/mturk/deleteHITs', routeMturk.deleteHITs);
 
 /*****************/
 /* IP & Hostname */
