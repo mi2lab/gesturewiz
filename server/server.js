@@ -17,25 +17,6 @@ const express = require('express'),
     routeGestures = require('./routes/gestures'),
     routeMturk = require('./routes/mturk');
 
-/*************
- * Cron Jobs *
- *************/
-
-const CronJob = require('cron').CronJob;
-
-const job = new CronJob('00 00 00 * * *', function () {
-        /* Runs every day at 12am. */
-
-        // TODO do something
-        console.log('Cron job executed.');
-
-    }, function () {
-        /* This function is executed when the job stops */
-    },
-    true, /* Start the job right now */
-    'US/Michigan' /* Time zone of this job. */
-);
-
 /*************/
 /* Socket IO */
 /*************/
@@ -203,7 +184,7 @@ expressApp.get('/save', function (req, res) {
     var filePath;
 
     if (req.query && req.query.f) {
-        filePath = __dirname + '/../public/study2_' + _.escape(req.query.f) + '.txt';
+        filePath = __dirname + '/../public/study_' + _.escape(req.query.f) + '.txt';
     }
     else {
         filePath = __dirname + '/../public/data.txt'; // make sure we point to the right dir!!!
